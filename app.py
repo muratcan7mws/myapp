@@ -10,7 +10,7 @@ def home():
 # Health check endpoint (CI/CD için kritik)
 @app.route("/health")
 def health():
-    return "OK", 200
+    return "OK", 500
 
 
 if __name__ == "__main__":
