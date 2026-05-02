@@ -5,7 +5,7 @@ app = Flask(__name__)
 # Ana endpoint
 @app.route("/")
 def home():
-    return "Hello world"
+    return "Seni çok seviyorum Duyguu7 <3 🚀"
 
 # Health check endpoint (CI/CD için kritik)
 @app.route("/health")
