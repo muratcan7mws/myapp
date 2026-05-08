@@ -132,6 +132,12 @@ def home():
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
     }
 
+    .shape.selected {
+      border-color: #4f46e5;
+      background: #eef2ff;
+      transform: scale(1.08);
+    }
+
     .shape.hidden {
       visibility: hidden;
     }
@@ -170,7 +176,7 @@ def home():
 <body>
   <div class="container">
     <h1>Şekil Eşleştirme Oyunu 🎨</h1>
-    <p class="subtitle">Seviyeleri tamamla, şekilleri doğru kutulara sürükle.</p>
+    <p class="subtitle">Seviyeleri tamamla, şekilleri doğru kutulara sürükle veya dokunarak eşleştir.</p>
 
     <div class="topbar">
       <div class="badge" id="levelBadge">Level 1 / 10</div>
@@ -230,6 +236,42 @@ def home():
       return [...array].sort(() => Math.random() - 0.5);
     }
 
+    function handleMatch(target, config) {
+      if (!draggedShape || target.classList.contains("correct")) {
+        return;
+      }
+
+      if (target.dataset.shape === draggedShape.dataset.shape) {
+        target.innerHTML = draggedShape.innerHTML;
+        target.classList.add("correct");
+
+        draggedShape.classList.add("hidden");
+        draggedShape.classList.remove("selected");
+
+        correctCount++;
+
+        scoreBadge.innerHTML = `Doğru: ${correctCount} / ${config.count}`;
+
+        if (correctCount === config.count) {
+          if (currentLevel === 9) {
+            messageEl.innerHTML = "Tebrikler! Tüm seviyeleri tamamladın 🎉";
+            nextBtn.style.display = "none";
+          } else {
+            messageEl.innerHTML = "Success 🎉 Level tamamlandı!";
+            nextBtn.style.display = "inline-block";
+          }
+        }
+      } else {
+        messageEl.innerHTML = "Tekrar dene 🙂";
+
+        setTimeout(() => {
+          if (correctCount !== config.count) {
+            messageEl.innerHTML = "";
+          }
+        }, 900);
+      }
+    }
+
     function loadLevel() {
       correctCount = 0;
       draggedShape = null;
@@ -265,32 +307,11 @@ def home():
         target.addEventListener("drop", event => {
           event.preventDefault();
           target.classList.remove("hover");
+          handleMatch(target, config);
+        });
 
-          if (!draggedShape || target.classList.contains("correct")) return;
-
-          if (target.dataset.shape === draggedShape.dataset.shape) {
-            target.innerHTML = draggedShape.innerHTML;
-            target.classList.add("correct");
-            draggedShape.classList.add("hidden");
-            correctCount++;
-
-            scoreBadge.innerHTML = `Doğru: ${correctCount} / ${config.count}`;
-
-            if (correctCount === config.count) {
-              if (currentLevel === 9) {
-                messageEl.innerHTML = "Tebrikler! Tüm seviyeleri tamamladın 🎉";
-                nextBtn.style.display = "none";
-              } else {
-                messageEl.innerHTML = "Success 🎉 Level tamamlandı!";
-                nextBtn.style.display = "inline-block";
-              }
-            }
-          } else {
-            messageEl.innerHTML = "Tekrar dene 🙂";
-            setTimeout(() => {
-              if (correctCount !== config.count) messageEl.innerHTML = "";
-            }, 900);
-          }
+        target.addEventListener("click", () => {
+          handleMatch(target, config);
         });
 
         targetsEl.appendChild(target);
@@ -304,6 +325,15 @@ def home():
         shapeEl.innerHTML = shape.icon;
 
         shapeEl.addEventListener("dragstart", () => {
+          draggedShape = shapeEl;
+        });
+
+        shapeEl.addEventListener("click", () => {
+          document.querySelectorAll(".shape").forEach(s =>
+            s.classList.remove("selected")
+          );
+
+          shapeEl.classList.add("selected");
           draggedShape = shapeEl;
         });
 
