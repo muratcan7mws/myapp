@@ -13,9 +13,7 @@ def home():
   <title>Shape Match Game</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -26,14 +24,14 @@ def home():
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1150px;
       margin: 0 auto;
-      padding: 32px 20px;
+      padding: 30px 20px;
       text-align: center;
     }
 
     h1 {
-      font-size: 42px;
+      font-size: 40px;
       margin-bottom: 8px;
       color: #312e81;
     }
@@ -41,29 +39,45 @@ def home():
     .subtitle {
       font-size: 18px;
       color: #64748b;
-      margin-bottom: 30px;
+      margin-bottom: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .badge {
+      background: white;
+      border-radius: 16px;
+      padding: 12px 18px;
+      font-weight: bold;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
     }
 
     .message {
       min-height: 48px;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
       color: #16a34a;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .targets {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      margin-bottom: 40px;
+      gap: 16px;
+      margin-bottom: 34px;
     }
 
     .target {
-      height: 130px;
+      height: 125px;
       border: 3px dashed #94a3b8;
       border-radius: 22px;
-      background: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.82);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -72,7 +86,7 @@ def home():
     }
 
     .target span {
-      opacity: 0.25;
+      opacity: 0.22;
     }
 
     .target.hover {
@@ -91,7 +105,7 @@ def home():
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 18px;
+      gap: 16px;
       padding: 24px;
       border-radius: 26px;
       background: white;
@@ -99,8 +113,8 @@ def home():
     }
 
     .shape {
-      width: 95px;
-      height: 95px;
+      width: 92px;
+      height: 92px;
       border-radius: 20px;
       background: #f8fafc;
       border: 2px solid #e2e8f0;
@@ -118,38 +132,37 @@ def home():
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
     }
 
-    .shape:active {
-      cursor: grabbing;
-    }
-
     .shape.hidden {
       visibility: hidden;
     }
 
-    .reset-btn {
+    .actions {
       margin-top: 28px;
-      padding: 14px 26px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 14px 24px;
       border: none;
       border-radius: 14px;
-      background: #4f46e5;
       color: white;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .reset-btn:hover {
-      background: #4338ca;
-    }
+    .next-btn { background: #16a34a; display: none; }
+    .reset-btn { background: #4f46e5; }
+
+    button:hover { opacity: 0.9; }
 
     @media (max-width: 800px) {
-      .targets {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      h1 {
-        font-size: 32px;
-      }
+      .targets { grid-template-columns: repeat(2, 1fr); }
+      h1 { font-size: 30px; }
+      .shape { width: 78px; height: 78px; font-size: 40px; }
     }
   </style>
 </head>
@@ -157,90 +170,160 @@ def home():
 <body>
   <div class="container">
     <h1>Şekil Eşleştirme Oyunu 🎨</h1>
-    <p class="subtitle">Şekilleri doğru kutulara sürükle ve eşleştir.</p>
+    <p class="subtitle">Seviyeleri tamamla, şekilleri doğru kutulara sürükle.</p>
+
+    <div class="topbar">
+      <div class="badge" id="levelBadge">Level 1 / 10</div>
+      <div class="badge" id="difficultyBadge">Zorluk: Kolay</div>
+      <div class="badge" id="scoreBadge">Doğru: 0</div>
+    </div>
 
     <div id="message" class="message"></div>
 
-    <div class="targets">
-      <div class="target" data-shape="circle"><span>⚪</span></div>
-      <div class="target" data-shape="square"><span>⬜</span></div>
-      <div class="target" data-shape="triangle"><span>🔺</span></div>
-      <div class="target" data-shape="star"><span>⭐</span></div>
-      <div class="target" data-shape="heart"><span>❤️</span></div>
-      <div class="target" data-shape="diamond"><span>🔷</span></div>
-      <div class="target" data-shape="moon"><span>🌙</span></div>
-      <div class="target" data-shape="sun"><span>☀️</span></div>
-    </div>
+    <div id="targets" class="targets"></div>
+    <div id="shapes" class="shapes"></div>
 
-    <div class="shapes">
-      <div class="shape" draggable="true" data-shape="sun">☀️</div>
-      <div class="shape" draggable="true" data-shape="heart">❤️</div>
-      <div class="shape" draggable="true" data-shape="square">⬜</div>
-      <div class="shape" draggable="true" data-shape="moon">🌙</div>
-      <div class="shape" draggable="true" data-shape="triangle">🔺</div>
-      <div class="shape" draggable="true" data-shape="diamond">🔷</div>
-      <div class="shape" draggable="true" data-shape="circle">⚪</div>
-      <div class="shape" draggable="true" data-shape="star">⭐</div>
+    <div class="actions">
+      <button class="next-btn" id="nextBtn">Sonraki Level</button>
+      <button class="reset-btn" onclick="restartGame()">Baştan Başlat</button>
     </div>
-
-    <button class="reset-btn" onclick="location.reload()">Yeniden Başlat</button>
   </div>
 
   <script>
-    let draggedShape = null;
+    const allShapes = [
+      { id: "circle", icon: "⚪" },
+      { id: "square", icon: "⬜" },
+      { id: "triangle", icon: "🔺" },
+      { id: "star", icon: "⭐" },
+      { id: "heart", icon: "❤️" },
+      { id: "diamond", icon: "🔷" },
+      { id: "moon", icon: "🌙" },
+      { id: "sun", icon: "☀️" }
+    ];
+
+    const levelConfig = [
+      { count: 3, difficulty: "Çok Kolay" },
+      { count: 3, difficulty: "Çok Kolay" },
+      { count: 4, difficulty: "Kolay" },
+      { count: 4, difficulty: "Kolay" },
+      { count: 5, difficulty: "Orta" },
+      { count: 5, difficulty: "Orta" },
+      { count: 6, difficulty: "Zor" },
+      { count: 6, difficulty: "Zor" },
+      { count: 7, difficulty: "Çok Zor" },
+      { count: 8, difficulty: "Usta" }
+    ];
+
+    let currentLevel = 0;
     let correctCount = 0;
-    const totalShapes = 8;
+    let draggedShape = null;
 
-    const shapes = document.querySelectorAll(".shape");
-    const targets = document.querySelectorAll(".target");
-    const message = document.getElementById("message");
+    const targetsEl = document.getElementById("targets");
+    const shapesEl = document.getElementById("shapes");
+    const messageEl = document.getElementById("message");
+    const levelBadge = document.getElementById("levelBadge");
+    const difficultyBadge = document.getElementById("difficultyBadge");
+    const scoreBadge = document.getElementById("scoreBadge");
+    const nextBtn = document.getElementById("nextBtn");
 
-    shapes.forEach(shape => {
-      shape.addEventListener("dragstart", () => {
-        draggedShape = shape;
-      });
-    });
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
 
-    targets.forEach(target => {
-      target.addEventListener("dragover", event => {
-        event.preventDefault();
-        target.classList.add("hover");
-      });
+    function loadLevel() {
+      correctCount = 0;
+      draggedShape = null;
+      messageEl.innerHTML = "";
+      nextBtn.style.display = "none";
 
-      target.addEventListener("dragleave", () => {
-        target.classList.remove("hover");
-      });
+      const config = levelConfig[currentLevel];
+      const selectedShapes = shuffle(allShapes).slice(0, config.count);
+      const shuffledShapes = shuffle(selectedShapes);
 
-      target.addEventListener("drop", event => {
-        event.preventDefault();
-        target.classList.remove("hover");
+      levelBadge.innerHTML = `Level ${currentLevel + 1} / 10`;
+      difficultyBadge.innerHTML = `Zorluk: ${config.difficulty}`;
+      scoreBadge.innerHTML = `Doğru: 0 / ${config.count}`;
 
-        if (!draggedShape || target.classList.contains("correct")) {
-          return;
-        }
+      targetsEl.innerHTML = "";
+      shapesEl.innerHTML = "";
 
-        const targetShape = target.dataset.shape;
-        const draggedShapeName = draggedShape.dataset.shape;
+      selectedShapes.forEach(shape => {
+        const target = document.createElement("div");
+        target.className = "target";
+        target.dataset.shape = shape.id;
+        target.innerHTML = `<span>${shape.icon}</span>`;
 
-        if (targetShape === draggedShapeName) {
-          target.innerHTML = draggedShape.innerHTML;
-          target.classList.add("correct");
-          draggedShape.classList.add("hidden");
-          correctCount++;
+        target.addEventListener("dragover", event => {
+          event.preventDefault();
+          target.classList.add("hover");
+        });
 
-          if (correctCount === totalShapes) {
-            message.innerHTML = "Success 🎉 Tüm şekiller doğru eşleşti!";
-          }
-        } else {
-          message.innerHTML = "Tekrar dene 🙂";
-          setTimeout(() => {
-            if (correctCount !== totalShapes) {
-              message.innerHTML = "";
+        target.addEventListener("dragleave", () => {
+          target.classList.remove("hover");
+        });
+
+        target.addEventListener("drop", event => {
+          event.preventDefault();
+          target.classList.remove("hover");
+
+          if (!draggedShape || target.classList.contains("correct")) return;
+
+          if (target.dataset.shape === draggedShape.dataset.shape) {
+            target.innerHTML = draggedShape.innerHTML;
+            target.classList.add("correct");
+            draggedShape.classList.add("hidden");
+            correctCount++;
+
+            scoreBadge.innerHTML = `Doğru: ${correctCount} / ${config.count}`;
+
+            if (correctCount === config.count) {
+              if (currentLevel === 9) {
+                messageEl.innerHTML = "Tebrikler! Tüm seviyeleri tamamladın 🎉";
+                nextBtn.style.display = "none";
+              } else {
+                messageEl.innerHTML = "Success 🎉 Level tamamlandı!";
+                nextBtn.style.display = "inline-block";
+              }
             }
-          }, 1000);
-        }
+          } else {
+            messageEl.innerHTML = "Tekrar dene 🙂";
+            setTimeout(() => {
+              if (correctCount !== config.count) messageEl.innerHTML = "";
+            }, 900);
+          }
+        });
+
+        targetsEl.appendChild(target);
       });
+
+      shuffledShapes.forEach(shape => {
+        const shapeEl = document.createElement("div");
+        shapeEl.className = "shape";
+        shapeEl.draggable = true;
+        shapeEl.dataset.shape = shape.id;
+        shapeEl.innerHTML = shape.icon;
+
+        shapeEl.addEventListener("dragstart", () => {
+          draggedShape = shapeEl;
+        });
+
+        shapesEl.appendChild(shapeEl);
+      });
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (currentLevel < 9) {
+        currentLevel++;
+        loadLevel();
+      }
     });
+
+    function restartGame() {
+      currentLevel = 0;
+      loadLevel();
+    }
+
+    loadLevel();
   </script>
 </body>
 </html>
