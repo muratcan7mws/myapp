@@ -163,9 +163,7 @@ h1,h2 {
   100% { transform:scale(1); box-shadow:0 0 0 rgba(34,197,94,0); }
 }
 
-.hidden {
-  visibility:hidden;
-}
+.hidden { visibility:hidden; }
 
 button {
   border:none;
@@ -179,9 +177,7 @@ button {
   font-size:15px;
 }
 
-.back {
-  background:#64748b;
-}
+.back { background:#64748b; }
 
 .success {
   color:#16a34a;
@@ -255,10 +251,56 @@ input {
   }
 }
 
+.story-card {
+  max-width: 820px;
+  margin: 20px auto;
+  background: #fff7ed;
+  border: 3px solid #fed7aa;
+  border-radius: 30px;
+  padding: 24px;
+  box-shadow: 0 14px 35px rgba(15,23,42,.12);
+}
+
+.story-scene {
+  font-size: 88px;
+  margin: 14px 0;
+  line-height: 1.2;
+}
+
+.story-text {
+  font-size: 20px;
+  line-height: 1.65;
+  font-weight: bold;
+  color: #334155;
+}
+
+.story-options {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.story-option {
+  min-width: 150px;
+  min-height: 90px;
+  border-radius: 22px;
+  background: #eef2ff;
+  border: 2px solid #818cf8;
+  color: #312e81;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 14px;
+}
+
+.story-controls button {
+  background: #f97316;
+}
+
 @media(max-width:900px){
-  .layout {
-    grid-template-columns:1fr;
-  }
+  .layout { grid-template-columns:1fr; }
 
   .box,.choice {
     width:86px;
@@ -267,12 +309,17 @@ input {
     padding:5px;
   }
 
-  .box {
-    font-size:14px;
-  }
+  .box { font-size:14px; }
 
-  h1 {
-    font-size:30px;
+  h1 { font-size:30px; }
+
+  .story-scene { font-size:60px; }
+
+  .story-text { font-size:17px; }
+
+  .story-option {
+    min-width: 130px;
+    font-size: 18px;
   }
 }
 </style>
@@ -281,7 +328,7 @@ input {
 <body>
 <div class="container">
 <h1>Çocuk Oyunları 🎈</h1>
-<p class="subtitle">8 farklı oyun, 20 seviye, puan sistemi ve eğlenceli öğrenme!</p>
+<p class="subtitle">9 farklı oyun, 20 seviye, puan sistemi ve eğlenceli öğrenme!</p>
 
 <div class="layout">
   <main>
@@ -326,7 +373,8 @@ const games = [
   {id:"animal", title:"Hayvan Eşleştirme", icon:"🐶", desc:"Hayvanları isimleriyle eşleştir."},
   {id:"letter", title:"Harf Oyunu", icon:"🔤", desc:"Harfleri ilgili nesnelerle eşleştir."},
   {id:"pattern", title:"Sıralama Oyunu", icon:"🧩", desc:"Eksik sayıyı bul."},
-  {id:"compare", title:"Büyük-Küçük Oyunu", icon:"⚖️", desc:"Büyük, küçük veya eşit olanı bul."}
+  {id:"compare", title:"Büyük-Küçük Oyunu", icon:"⚖️", desc:"Büyük, küçük veya eşit olanı bul."},
+  {id:"story", title:"Hikaye Oyunu", icon:"📖", desc:"Seçim yap, hikaye değişsin."}
 ];
 
 const shapes = [
@@ -360,6 +408,13 @@ let needed = 0;
 let dragClone = null;
 let draggedChoice = null;
 
+let storyState = {
+  character: null,
+  fruit: null,
+  animal: null,
+  currentText: ""
+};
+
 const menu = document.getElementById("menu");
 const gameArea = document.getElementById("gameArea");
 const targets = document.getElementById("targets");
@@ -375,7 +430,7 @@ games.forEach(g => {
     <div class="icon">${g.icon}</div>
     <h3>${g.title}</h3>
     <p>${g.desc}</p>
-    <b>20 Seviye</b>
+    <b>${g.id === "story" ? "Sesli İnteraktif Hikaye" : "20 Seviye"}</b>
   `;
   c.onclick = () => startGame(g.id);
   menu.appendChild(c);
@@ -390,7 +445,7 @@ function getGameTitle(id){
 }
 
 function updateBadges(){
-  levelBadge.innerHTML = `Seviye ${level}/20`;
+  levelBadge.innerHTML = currentGame === "story" ? "Hikaye Modu" : `Seviye ${level}/20`;
   scoreBadge.innerHTML = `Puan ${score}`;
   attemptBadge.innerHTML = `Deneme ${attempts}`;
   totalScore.innerHTML = score;
@@ -411,7 +466,7 @@ function logAttempt(game, result, points){
     : "0 puan";
 
   row.innerHTML = `
-    <span>${getGameTitle(game)} - Seviye ${level}</span>
+    <span>${getGameTitle(game)} - ${game === "story" ? "Hikaye tamamlandı" : "Seviye " + level}</span>
     <span>${statusText}</span>
     <b>${pointText}</b>
   `;
@@ -462,12 +517,14 @@ function startGame(id){
   level = 1;
   selected = null;
   correctCount = 0;
+  stopStoryVoice();
   menu.style.display = "none";
   gameArea.style.display = "block";
   loadCurrentGame();
 }
 
 function goHome(){
+  stopStoryVoice();
   gameArea.style.display = "none";
   menu.style.display = "grid";
 }
@@ -496,6 +553,7 @@ function loadCurrentGame(){
   if(currentGame==="letter") loadLetters();
   if(currentGame==="pattern") loadPattern();
   if(currentGame==="compare") loadCompare();
+  if(currentGame==="story") loadStory();
 }
 
 function selectChoice(c){
@@ -711,6 +769,171 @@ function loadCompare(){
   needed = 1;
   [">","<","="].forEach(x=>makeChoice(x,x));
   makeTarget(answer,"Cevap");
+}
+
+/* HIKAYE OYUNU */
+
+function speakStory(text) {
+  if (!("speechSynthesis" in window)) {
+    alert("Bu tarayıcı seslendirmeyi desteklemiyor.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "tr-TR";
+  utterance.rate = 0.88;
+  utterance.pitch = storyState.character === "girl" ? 1.45 : 1.15;
+
+  const voices = window.speechSynthesis.getVoices();
+  const trVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes("tr"));
+  if (trVoice) utterance.voice = trVoice;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopStoryVoice() {
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+function pauseStoryVoice() {
+  if ("speechSynthesis" in window) window.speechSynthesis.pause();
+}
+
+function resumeStoryVoice() {
+  if ("speechSynthesis" in window) window.speechSynthesis.resume();
+}
+
+function storyBox(scene, text, optionsHtml = "") {
+  storyState.currentText = text;
+
+  questionArea.innerHTML = `
+    <div class="story-card">
+      <div class="story-scene">${scene}</div>
+      <div class="story-text">${text}</div>
+
+      <div class="story-controls">
+        <button onclick="speakStory(storyState.currentText)">Seslendir 🔊</button>
+        <button onclick="pauseStoryVoice()">Durdur ⏸️</button>
+        <button onclick="resumeStoryVoice()">Devam Et ▶️</button>
+        <button onclick="stopStoryVoice()">Sesi Kapat 🔇</button>
+      </div>
+
+      <div class="story-options">
+        ${optionsHtml}
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => speakStory(text), 300);
+}
+
+function loadStory() {
+  targets.innerHTML = "";
+  choices.innerHTML = "";
+  message.innerHTML = "";
+  failMessage.innerHTML = "";
+
+  storyState = {
+    character: null,
+    fruit: null,
+    animal: null,
+    currentText: ""
+  };
+
+  updateBadges();
+
+  storyBox(
+    "👧 👦",
+    "Hikayeye başlamadan önce kahramanını seç. Kız çocuk mu, erkek çocuk mu?",
+    `
+      <button class="story-option" onclick="selectStoryCharacter('girl')">👧 Kız Çocuk</button>
+      <button class="story-option" onclick="selectStoryCharacter('boy')">👦 Erkek Çocuk</button>
+    `
+  );
+}
+
+function selectStoryCharacter(character) {
+  storyState.character = character;
+
+  const hero = character === "girl" ? "küçük kız" : "küçük çocuk";
+
+  storyBox(
+    "🏡🌲🧺",
+    `Bir varmış bir yokmuş. Ormanın kenarında yaşayan sevimli bir ${hero} varmış.
+     Bir gün annesi ona kırmızı bir pelerin vermiş ve büyükannesine götürmesi için küçük bir sepet hazırlamış.
+     ${hero}, sepetini almış ve kuşların şarkı söylediği ormana doğru yürümeye başlamış.`,
+    `<button class="story-option" onclick="storyFruitScene()">Ormana Git 🌲</button>`
+  );
+}
+
+function storyFruitScene() {
+  const hero = storyState.character === "girl" ? "küçük kız" : "küçük çocuk";
+
+  storyBox(
+    "🌲🍎🍐",
+    `${hero}, ormanda yürürken renkli çiçekler, kelebekler ve meyve ağaçları görmüş.
+     Sepetine büyükannesi için bir meyve koymak istemiş.
+     Sence hangi meyveyi toplasın?`,
+    `
+      <button class="story-option" onclick="selectFruit('apple')">🍎 Elma</button>
+      <button class="story-option" onclick="selectFruit('pear')">🍐 Armut</button>
+    `
+  );
+}
+
+function selectFruit(fruit) {
+  storyState.fruit = fruit;
+
+  const hero = storyState.character === "girl" ? "küçük kız" : "küçük çocuk";
+  const fruitText = fruit === "apple" ? "kırmızı bir elma" : "tatlı bir armut";
+
+  storyBox(
+    fruit === "apple" ? "🍎🧺🌲" : "🍐🧺🌲",
+    `${hero}, sepete ${fruitText} koymuş.
+     Tam yoluna devam edecekken çalıların arasından bir ses duymuş.
+     Karşısına bir hayvan çıkmış. Sence bu hayvan hangisi olsun?`,
+    `
+      <button class="story-option" onclick="selectAnimalStory('wolf')">🐺 Kurt</button>
+      <button class="story-option" onclick="selectAnimalStory('fox')">🦊 Tilki</button>
+    `
+  );
+}
+
+function selectAnimalStory(animal) {
+  storyState.animal = animal;
+
+  const hero = storyState.character === "girl" ? "küçük kız" : "küçük çocuk";
+  const fruitText = storyState.fruit === "apple" ? "elmayı" : "armudu";
+
+  if (animal === "wolf") {
+    storyBox(
+      "🐺🌲🏠",
+      `Karşısına meraklı bir kurt çıkmış. Kurt ona nereye gittiğini sormuş.
+       ${hero}, büyükannesine gittiğini söylemiş ama annesinin sözünü hatırlayıp yoldan ayrılmamış.
+       Sepetindeki ${fruitText} sıkıca tutmuş ve güvenli patikadan yürümeye devam etmiş.
+       Sonunda büyükannesinin evine ulaşmış ve birlikte çok mutlu olmuşlar. Tebrikler, hikayeyi tamamladın!`,
+      `<button class="story-option" onclick="finishStoryGame()">Hikayeyi Bitir 🏆</button>`
+    );
+  } else {
+    storyBox(
+      "🦊🌸🏠",
+      `Karşısına akıllı bir tilki çıkmış. Tilki ona ormandaki en güzel çiçekleri göstermiş.
+       Ama ${hero}, önce büyükannesine gitmesi gerektiğini söylemiş.
+       Tilki ona güvenli yolu tarif etmiş. ${hero}, sepetindeki ${fruitText} ile büyükannesinin evine varmış.
+       Büyükannesi çok sevinmiş ve birlikte güzel bir gün geçirmişler. Tebrikler, hikayeyi tamamladın!`,
+      `<button class="story-option" onclick="finishStoryGame()">Hikayeyi Bitir 🏆</button>`
+    );
+  }
+}
+
+function finishStoryGame() {
+  stopStoryVoice();
+  message.innerHTML = "Hikaye tamamlandı 🎉";
+  score += 100;
+  logAttempt("story", "✅", 100);
+  confetti();
 }
 </script>
 </body>
