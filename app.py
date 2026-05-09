@@ -13,24 +13,41 @@ def home():
 <title>Çocuk Oyunları</title>
 
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin:0;
   font-family:Arial,sans-serif;
   color:#1e293b;
   min-height:100vh;
+  overflow-x:hidden;
   background:
-    radial-gradient(circle at 10% 20%, #fde68a 0 45px, transparent 46px),
-    radial-gradient(circle at 85% 15%, #f9a8d4 0 55px, transparent 56px),
-    radial-gradient(circle at 20% 85%, #93c5fd 0 60px, transparent 61px),
-    radial-gradient(circle at 90% 80%, #86efac 0 50px, transparent 51px),
+    radial-gradient(circle at 8% 15%, #fde68a 0 42px, transparent 43px),
+    radial-gradient(circle at 90% 12%, #f9a8d4 0 54px, transparent 55px),
+    radial-gradient(circle at 18% 85%, #93c5fd 0 60px, transparent 61px),
+    radial-gradient(circle at 88% 78%, #86efac 0 50px, transparent 51px),
     linear-gradient(135deg,#fef3c7,#e0f2fe,#fce7f3);
-  background-attachment: fixed;
+  background-attachment:fixed;
+}
+
+body::before {
+  content:"🌈 ⭐ 🎈 🧸 🚀 🍭 ☁️";
+  position:fixed;
+  top:20px;
+  left:0;
+  width:100%;
+  text-align:center;
+  font-size:42px;
+  opacity:.22;
+  pointer-events:none;
 }
 
 .container {
   max-width:1300px;
   margin:auto;
   padding:24px;
+  position:relative;
+  z-index:1;
 }
 
 h1,h2 {
@@ -58,8 +75,8 @@ h1,h2 {
 }
 
 .card,.panel,.game {
-  background:rgba(255,255,255,0.92);
-  border-radius:26px;
+  background:rgba(255,255,255,0.94);
+  border-radius:28px;
   padding:22px;
   box-shadow:0 14px 40px rgba(15,23,42,.14);
   border:3px solid rgba(255,255,255,.9);
@@ -93,22 +110,39 @@ h1,h2 {
 }
 
 .box,.choice {
-  width:96px;
-  height:96px;
+  width:102px;
+  height:92px;
   border-radius:22px;
   border:2px solid #cbd5e1;
   background:#f8fafc;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:34px;
-  cursor:pointer;
+  font-size:30px;
+  cursor:grab;
   user-select:none;
   text-align:center;
-  padding:8px;
-  line-height:1.15;
-  word-break:break-word;
+  padding:7px;
+  line-height:1.05;
   overflow:hidden;
+  white-space:normal;
+  word-break:normal;
+  overflow-wrap:normal;
+  transition:.18s;
+  touch-action:none;
+}
+
+.box {
+  font-size:17px;
+  font-weight:bold;
+}
+
+.choice.dragging {
+  opacity:.8;
+  transform:scale(1.12);
+  position:fixed;
+  z-index:9999;
+  pointer-events:none;
 }
 
 .choice.selected {
@@ -118,8 +152,15 @@ h1,h2 {
 }
 
 .correct {
-  background:#dcfce7;
-  border-color:#22c55e;
+  background:#dcfce7 !important;
+  border-color:#22c55e !important;
+  animation: correctGlow .55s ease-in-out;
+}
+
+@keyframes correctGlow {
+  0% { transform:scale(1); box-shadow:0 0 0 rgba(34,197,94,0); }
+  50% { transform:scale(1.12); box-shadow:0 0 28px rgba(34,197,94,.8); }
+  100% { transform:scale(1); box-shadow:0 0 0 rgba(34,197,94,0); }
 }
 
 .hidden {
@@ -198,16 +239,36 @@ input {
   text-align:center;
 }
 
+.confetti {
+  position:fixed;
+  top:-20px;
+  font-size:24px;
+  z-index:99999;
+  animation: fall 2.2s linear forwards;
+  pointer-events:none;
+}
+
+@keyframes fall {
+  to {
+    transform:translateY(110vh) rotate(720deg);
+    opacity:0;
+  }
+}
+
 @media(max-width:900px){
   .layout {
     grid-template-columns:1fr;
   }
 
   .box,.choice {
-    width:82px;
-    height:82px;
-    font-size:26px;
-    padding:6px;
+    width:86px;
+    height:78px;
+    font-size:24px;
+    padding:5px;
+  }
+
+  .box {
+    font-size:14px;
   }
 
   h1 {
@@ -265,7 +326,7 @@ const games = [
   {id:"animal", title:"Hayvan Eşleştirme", icon:"🐶", desc:"Hayvanları isimleriyle eşleştir."},
   {id:"letter", title:"Harf Oyunu", icon:"🔤", desc:"Harfleri ilgili nesnelerle eşleştir."},
   {id:"pattern", title:"Sıralama Oyunu", icon:"🧩", desc:"Eksik sayıyı bul."},
-  {id:"compare", title:"Büyük-Küçük Oyunu", icon:"⚖️", desc:"Hangi sayı büyük, küçük veya eşit?"}
+  {id:"compare", title:"Büyük-Küçük Oyunu", icon:"⚖️", desc:"Büyük, küçük veya eşit olanı bul."}
 ];
 
 const shapes = [
@@ -296,6 +357,8 @@ let attempts = 0;
 let selected = null;
 let correctCount = 0;
 let needed = 0;
+let dragClone = null;
+let draggedChoice = null;
 
 const menu = document.getElementById("menu");
 const gameArea = document.getElementById("gameArea");
@@ -318,13 +381,8 @@ games.forEach(g => {
   menu.appendChild(c);
 });
 
-function shuffle(a){
-  return [...a].sort(()=>Math.random()-.5);
-}
-
-function countByLevel(){
-  return Math.min(3 + Math.floor(level/3), 8);
-}
+function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+function countByLevel(){ return Math.min(3 + Math.floor(level/3), 8); }
 
 function getGameTitle(id){
   const game = games.find(g => g.id === id);
@@ -341,7 +399,6 @@ function updateBadges(){
 
 function logAttempt(game, result, points){
   attempts++;
-
   const row = document.createElement("div");
   row.className = "row";
 
@@ -363,6 +420,19 @@ function logAttempt(game, result, points){
   updateBadges();
 }
 
+function confetti(){
+  const emojis = ["🎉","⭐","🎈","🌈","🍭","✨","🧸"];
+  for(let i=0;i<45;i++){
+    const el = document.createElement("div");
+    el.className = "confetti";
+    el.innerHTML = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + "vw";
+    el.style.animationDuration = (1.6 + Math.random()*1.4) + "s";
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),3000);
+  }
+}
+
 function resetToStart(){
   failMessage.innerHTML = "Yanlış cevap! Oyun başa dönüyor 🙂";
   logAttempt(currentGame, "❌", 0);
@@ -376,13 +446,14 @@ function successLevel(){
   const points = level * 10;
   score += points;
   logAttempt(currentGame, "✅", points);
-  message.innerHTML = "Success 🎉";
+  message.innerHTML = "Harika! Doğru cevap 🎉";
 
   if(level === 20){
     message.innerHTML = "Tebrikler! Bu oyunun tüm seviyelerini tamamladın 🏆";
+    confetti();
   } else {
     level++;
-    setTimeout(loadCurrentGame, 800);
+    setTimeout(loadCurrentGame, 850);
   }
 }
 
@@ -427,16 +498,58 @@ function loadCurrentGame(){
   if(currentGame==="compare") loadCompare();
 }
 
+function selectChoice(c){
+  document.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));
+  c.classList.add("selected");
+  selected = c;
+}
+
+function enableDrag(choice){
+  choice.addEventListener("pointerdown", e => {
+    if(choice.classList.contains("hidden")) return;
+
+    draggedChoice = choice;
+    selected = choice;
+
+    dragClone = choice.cloneNode(true);
+    dragClone.classList.add("dragging");
+    dragClone.style.left = e.clientX - 45 + "px";
+    dragClone.style.top = e.clientY - 45 + "px";
+    document.body.appendChild(dragClone);
+
+    choice.setPointerCapture(e.pointerId);
+  });
+
+  choice.addEventListener("pointermove", e => {
+    if(!dragClone) return;
+    dragClone.style.left = e.clientX - 45 + "px";
+    dragClone.style.top = e.clientY - 45 + "px";
+  });
+
+  choice.addEventListener("pointerup", e => {
+    if(!dragClone) return;
+
+    dragClone.remove();
+    dragClone = null;
+
+    const elem = document.elementFromPoint(e.clientX, e.clientY);
+    const target = elem ? elem.closest(".box") : null;
+
+    if(target){
+      handleTarget(target);
+    }
+
+    draggedChoice = null;
+  });
+}
+
 function makeChoice(id, html){
   const c = document.createElement("div");
   c.className = "choice";
   c.dataset.id = id;
   c.innerHTML = html;
-  c.onclick = () => {
-    document.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));
-    c.classList.add("selected");
-    selected = c;
-  };
+  c.onclick = () => selectChoice(c);
+  enableDrag(c);
   choices.appendChild(c);
 }
 
@@ -445,23 +558,25 @@ function makeTarget(id, html="❔"){
   t.className = "box";
   t.dataset.id = id;
   t.innerHTML = html;
-  t.onclick = () => {
-    if(!selected || t.classList.contains("correct")) return;
-
-    if(selected.dataset.id === t.dataset.id){
-      t.innerHTML = selected.innerHTML;
-      t.classList.add("correct");
-      selected.classList.add("hidden");
-      correctCount++;
-
-      if(correctCount === needed){
-        successLevel();
-      }
-    } else {
-      resetToStart();
-    }
-  };
+  t.onclick = () => handleTarget(t);
   targets.appendChild(t);
+}
+
+function handleTarget(t){
+  if(!selected || t.classList.contains("correct")) return;
+
+  if(selected.dataset.id === t.dataset.id){
+    t.innerHTML = selected.innerHTML;
+    t.classList.add("correct");
+    selected.classList.add("hidden");
+    correctCount++;
+
+    if(correctCount === needed){
+      successLevel();
+    }
+  } else {
+    resetToStart();
+  }
 }
 
 function loadMatch(data){
@@ -482,11 +597,8 @@ function loadColor(){
     ch.className = "choice";
     ch.dataset.id = c[0];
     ch.style.background = c[2];
-    ch.onclick = () => {
-      document.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));
-      ch.classList.add("selected");
-      selected = ch;
-    };
+    ch.onclick = () => selectChoice(ch);
+    enableDrag(ch);
     choices.appendChild(ch);
   });
 }
