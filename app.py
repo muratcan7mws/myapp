@@ -10,351 +10,483 @@ def home():
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shape Match Game</title>
-
+  <title>Çocuk Oyunları</title>
   <style>
-    * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #eef2ff, #fdf2f8);
-      min-height: 100vh;
       color: #1e293b;
     }
 
     .container {
-      max-width: 1150px;
-      margin: 0 auto;
-      padding: 30px 20px;
+      max-width: 1100px;
+      margin: auto;
+      padding: 28px 18px;
       text-align: center;
     }
 
     h1 {
-      font-size: 40px;
-      margin-bottom: 8px;
       color: #312e81;
+      font-size: 42px;
     }
 
-    .subtitle {
-      font-size: 18px;
-      color: #64748b;
-      margin-bottom: 18px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 22px;
-    }
-
-    .badge {
-      background: white;
-      border-radius: 16px;
-      padding: 12px 18px;
-      font-weight: bold;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
-    }
-
-    .message {
-      min-height: 48px;
-      font-size: 26px;
-      font-weight: bold;
-      color: #16a34a;
-      margin-bottom: 18px;
-    }
-
-    .targets {
+    .menu {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 34px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      margin-top: 30px;
     }
 
-    .target {
-      height: 125px;
-      border: 3px dashed #94a3b8;
-      border-radius: 22px;
-      background: rgba(255,255,255,0.82);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 52px;
-      transition: 0.2s;
-    }
-
-    .target span {
-      opacity: 0.22;
-    }
-
-    .target.hover {
-      transform: scale(1.04);
-      border-color: #6366f1;
-      background: #eef2ff;
-    }
-
-    .target.correct {
-      border-style: solid;
-      border-color: #22c55e;
-      background: #dcfce7;
-    }
-
-    .shapes {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 16px;
-      padding: 24px;
-      border-radius: 26px;
+    .card {
       background: white;
-      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+      border-radius: 24px;
+      padding: 28px 18px;
+      box-shadow: 0 14px 40px rgba(15,23,42,.12);
+      cursor: pointer;
+      transition: .2s;
     }
 
-    .shape {
-      width: 92px;
-      height: 92px;
-      border-radius: 20px;
-      background: #f8fafc;
-      border: 2px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-      cursor: grab;
-      user-select: none;
-      transition: 0.2s;
+    .card:hover {
+      transform: translateY(-6px);
     }
 
-    .shape:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
+    .icon {
+      font-size: 54px;
+      margin-bottom: 12px;
     }
 
-    .shape.selected {
-      border-color: #4f46e5;
-      background: #eef2ff;
-      transform: scale(1.08);
-    }
-
-    .shape.hidden {
-      visibility: hidden;
-    }
-
-    .actions {
-      margin-top: 28px;
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
+    .game {
+      display: none;
+      background: white;
+      margin-top: 24px;
+      border-radius: 26px;
+      padding: 26px;
+      box-shadow: 0 14px 40px rgba(15,23,42,.12);
     }
 
     button {
-      padding: 14px 24px;
       border: none;
       border-radius: 14px;
+      padding: 13px 22px;
+      background: #4f46e5;
       color: white;
-      font-size: 16px;
       font-weight: bold;
+      cursor: pointer;
+      margin: 8px;
+    }
+
+    .back {
+      background: #64748b;
+    }
+
+    .success {
+      color: #16a34a;
+      font-size: 26px;
+      font-weight: bold;
+      min-height: 36px;
+    }
+
+    .items {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .box, .choice {
+      width: 95px;
+      height: 95px;
+      border-radius: 20px;
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
       cursor: pointer;
     }
 
-    .next-btn { background: #16a34a; display: none; }
-    .reset-btn { background: #4f46e5; }
+    .selected {
+      border-color: #4f46e5;
+      background: #eef2ff;
+      transform: scale(1.06);
+    }
 
-    button:hover { opacity: 0.9; }
+    .correct {
+      background: #dcfce7;
+      border-color: #22c55e;
+    }
 
-    @media (max-width: 800px) {
-      .targets { grid-template-columns: repeat(2, 1fr); }
+    .hidden {
+      visibility: hidden;
+    }
+
+    input {
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    @media(max-width: 700px) {
       h1 { font-size: 30px; }
-      .shape { width: 78px; height: 78px; font-size: 40px; }
+      .box, .choice {
+        width: 76px;
+        height: 76px;
+        font-size: 36px;
+      }
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h1>Şekil Eşleştirme Oyunu 🎨</h1>
-    <p class="subtitle">Seviyeleri tamamla, şekilleri doğru kutulara sürükle veya dokunarak eşleştir.</p>
+    <h1>Çocuk Oyunları 🎈</h1>
+    <p>Oynamak istediğin oyunu seç.</p>
 
-    <div class="topbar">
-      <div class="badge" id="levelBadge">Level 1 / 10</div>
-      <div class="badge" id="difficultyBadge">Zorluk: Kolay</div>
-      <div class="badge" id="scoreBadge">Doğru: 0</div>
+    <div id="menu" class="menu">
+      <div class="card" onclick="openGame('shapeGame')">
+        <div class="icon">🔺</div>
+        <h3>Şekil Eşleştirme</h3>
+        <p>Şekilleri doğru kutuya koy.</p>
+      </div>
+
+      <div class="card" onclick="openGame('colorGame')">
+        <div class="icon">🎨</div>
+        <h3>Renk Eşleştirme</h3>
+        <p>Renkleri doğru isimle eşleştir.</p>
+      </div>
+
+      <div class="card" onclick="openGame('numberGame')">
+        <div class="icon">🔢</div>
+        <h3>Sayı Oyunu</h3>
+        <p>Kaç tane nesne var?</p>
+      </div>
+
+      <div class="card" onclick="openGame('memoryGame')">
+        <div class="icon">🧠</div>
+        <h3>Hafıza Oyunu</h3>
+        <p>Aynı kartları bul.</p>
+      </div>
+
+      <div class="card" onclick="openGame('animalGame')">
+        <div class="icon">🐶</div>
+        <h3>Hayvan Eşleştirme</h3>
+        <p>Hayvanı adıyla eşleştir.</p>
+      </div>
     </div>
 
-    <div id="message" class="message"></div>
+    <div id="shapeGame" class="game">
+      <h2>Şekil Eşleştirme 🔺</h2>
+      <div id="shapeMsg" class="success"></div>
+      <div class="items" id="shapeTargets"></div>
+      <div class="items" id="shapeChoices"></div>
+      <button class="back" onclick="goHome()">Ana Menü</button>
+    </div>
 
-    <div id="targets" class="targets"></div>
-    <div id="shapes" class="shapes"></div>
+    <div id="colorGame" class="game">
+      <h2>Renk Eşleştirme 🎨</h2>
+      <div id="colorMsg" class="success"></div>
+      <div class="items" id="colorTargets"></div>
+      <div class="items" id="colorChoices"></div>
+      <button class="back" onclick="goHome()">Ana Menü</button>
+    </div>
 
-    <div class="actions">
-      <button class="next-btn" id="nextBtn">Sonraki Level</button>
-      <button class="reset-btn" onclick="restartGame()">Baştan Başlat</button>
+    <div id="numberGame" class="game">
+      <h2>Sayı Oyunu 🔢</h2>
+      <div id="numberQuestion" style="font-size:52px;margin:20px;"></div>
+      <input id="numberAnswer" type="number" placeholder="Kaç tane?" />
+      <br>
+      <button onclick="checkNumber()">Kontrol Et</button>
+      <div id="numberMsg" class="success"></div>
+      <button class="back" onclick="goHome()">Ana Menü</button>
+    </div>
+
+    <div id="memoryGame" class="game">
+      <h2>Hafıza Oyunu 🧠</h2>
+      <div id="memoryMsg" class="success"></div>
+      <div class="items" id="memoryBoard"></div>
+      <button class="back" onclick="goHome()">Ana Menü</button>
+    </div>
+
+    <div id="animalGame" class="game">
+      <h2>Hayvan Eşleştirme 🐶</h2>
+      <div id="animalMsg" class="success"></div>
+      <div class="items" id="animalTargets"></div>
+      <div class="items" id="animalChoices"></div>
+      <button class="back" onclick="goHome()">Ana Menü</button>
     </div>
   </div>
 
-  <script>
-    const allShapes = [
-      { id: "circle", icon: "⚪" },
-      { id: "square", icon: "⬜" },
-      { id: "triangle", icon: "🔺" },
-      { id: "star", icon: "⭐" },
-      { id: "heart", icon: "❤️" },
-      { id: "diamond", icon: "🔷" },
-      { id: "moon", icon: "🌙" },
-      { id: "sun", icon: "☀️" }
-    ];
+<script>
+function hideAll() {
+  document.getElementById("menu").style.display = "none";
+  document.querySelectorAll(".game").forEach(g => g.style.display = "none");
+}
 
-    const levelConfig = [
-      { count: 3, difficulty: "Çok Kolay" },
-      { count: 3, difficulty: "Çok Kolay" },
-      { count: 4, difficulty: "Kolay" },
-      { count: 4, difficulty: "Kolay" },
-      { count: 5, difficulty: "Orta" },
-      { count: 5, difficulty: "Orta" },
-      { count: 6, difficulty: "Zor" },
-      { count: 6, difficulty: "Zor" },
-      { count: 7, difficulty: "Çok Zor" },
-      { count: 8, difficulty: "Usta" }
-    ];
+function openGame(id) {
+  hideAll();
+  document.getElementById(id).style.display = "block";
 
-    let currentLevel = 0;
-    let correctCount = 0;
-    let draggedShape = null;
+  if (id === "shapeGame") loadShapeGame();
+  if (id === "colorGame") loadColorGame();
+  if (id === "numberGame") loadNumberGame();
+  if (id === "memoryGame") loadMemoryGame();
+  if (id === "animalGame") loadAnimalGame();
+}
 
-    const targetsEl = document.getElementById("targets");
-    const shapesEl = document.getElementById("shapes");
-    const messageEl = document.getElementById("message");
-    const levelBadge = document.getElementById("levelBadge");
-    const difficultyBadge = document.getElementById("difficultyBadge");
-    const scoreBadge = document.getElementById("scoreBadge");
-    const nextBtn = document.getElementById("nextBtn");
+function goHome() {
+  document.querySelectorAll(".game").forEach(g => g.style.display = "none");
+  document.getElementById("menu").style.display = "grid";
+}
 
-    function shuffle(array) {
-      return [...array].sort(() => Math.random() - 0.5);
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+/* 1 - ŞEKİL OYUNU */
+const shapes = [
+  {id:"circle", icon:"⚪"},
+  {id:"square", icon:"⬜"},
+  {id:"triangle", icon:"🔺"},
+  {id:"star", icon:"⭐"},
+  {id:"heart", icon:"❤️"}
+];
+
+let selectedShape = null;
+let shapeCorrect = 0;
+
+function loadShapeGame() {
+  selectedShape = null;
+  shapeCorrect = 0;
+  shapeMsg.innerHTML = "";
+  shapeTargets.innerHTML = "";
+  shapeChoices.innerHTML = "";
+
+  shapes.forEach(s => {
+    let t = document.createElement("div");
+    t.className = "box";
+    t.dataset.id = s.id;
+    t.innerHTML = "❔";
+    t.onclick = () => matchShape(t);
+    shapeTargets.appendChild(t);
+  });
+
+  shuffle(shapes).forEach(s => {
+    let c = document.createElement("div");
+    c.className = "choice";
+    c.dataset.id = s.id;
+    c.innerHTML = s.icon;
+    c.onclick = () => {
+      document.querySelectorAll("#shapeChoices .choice").forEach(x => x.classList.remove("selected"));
+      c.classList.add("selected");
+      selectedShape = c;
+    };
+    shapeChoices.appendChild(c);
+  });
+}
+
+function matchShape(target) {
+  if (!selectedShape || target.classList.contains("correct")) return;
+
+  if (selectedShape.dataset.id === target.dataset.id) {
+    target.innerHTML = selectedShape.innerHTML;
+    target.classList.add("correct");
+    selectedShape.classList.add("hidden");
+    shapeCorrect++;
+
+    if (shapeCorrect === shapes.length) {
+      shapeMsg.innerHTML = "Success 🎉";
     }
+  }
+}
 
-    function handleMatch(target, config) {
-      if (!draggedShape || target.classList.contains("correct")) {
-        return;
+/* 2 - RENK OYUNU */
+const colors = [
+  {id:"red", name:"Kırmızı", color:"#ef4444"},
+  {id:"blue", name:"Mavi", color:"#3b82f6"},
+  {id:"green", name:"Yeşil", color:"#22c55e"},
+  {id:"yellow", name:"Sarı", color:"#eab308"}
+];
+
+let selectedColor = null;
+let colorCorrect = 0;
+
+function loadColorGame() {
+  selectedColor = null;
+  colorCorrect = 0;
+  colorMsg.innerHTML = "";
+  colorTargets.innerHTML = "";
+  colorChoices.innerHTML = "";
+
+  colors.forEach(c => {
+    let t = document.createElement("div");
+    t.className = "box";
+    t.dataset.id = c.id;
+    t.style.fontSize = "20px";
+    t.innerHTML = c.name;
+    t.onclick = () => matchColor(t);
+    colorTargets.appendChild(t);
+  });
+
+  shuffle(colors).forEach(c => {
+    let ch = document.createElement("div");
+    ch.className = "choice";
+    ch.dataset.id = c.id;
+    ch.style.background = c.color;
+    ch.onclick = () => {
+      document.querySelectorAll("#colorChoices .choice").forEach(x => x.classList.remove("selected"));
+      ch.classList.add("selected");
+      selectedColor = ch;
+    };
+    colorChoices.appendChild(ch);
+  });
+}
+
+function matchColor(target) {
+  if (!selectedColor || target.classList.contains("correct")) return;
+
+  if (selectedColor.dataset.id === target.dataset.id) {
+    target.classList.add("correct");
+    selectedColor.classList.add("hidden");
+    colorCorrect++;
+
+    if (colorCorrect === colors.length) {
+      colorMsg.innerHTML = "Success 🎉";
+    }
+  }
+}
+
+/* 3 - SAYI OYUNU */
+let currentNumber = 0;
+
+function loadNumberGame() {
+  currentNumber = Math.floor(Math.random() * 5) + 3;
+  numberQuestion.innerHTML = "🍎 ".repeat(currentNumber);
+  numberAnswer.value = "";
+  numberMsg.innerHTML = "";
+}
+
+function checkNumber() {
+  if (Number(numberAnswer.value) === currentNumber) {
+    numberMsg.innerHTML = "Success 🎉 Doğru bildin!";
+  } else {
+    numberMsg.innerHTML = "Tekrar dene 🙂";
+  }
+}
+
+/* 4 - HAFIZA OYUNU */
+let memoryFirst = null;
+let memoryLock = false;
+let memoryFound = 0;
+
+function loadMemoryGame() {
+  memoryFirst = null;
+  memoryLock = false;
+  memoryFound = 0;
+  memoryMsg.innerHTML = "";
+  memoryBoard.innerHTML = "";
+
+  const cards = shuffle(["🐶","🐱","🐰","🦊","🐶","🐱","🐰","🦊"]);
+
+  cards.forEach(icon => {
+    let card = document.createElement("div");
+    card.className = "box";
+    card.dataset.icon = icon;
+    card.innerHTML = "❓";
+    card.onclick = () => flipCard(card);
+    memoryBoard.appendChild(card);
+  });
+}
+
+function flipCard(card) {
+  if (memoryLock || card.classList.contains("correct") || card === memoryFirst) return;
+
+  card.innerHTML = card.dataset.icon;
+
+  if (!memoryFirst) {
+    memoryFirst = card;
+  } else {
+    if (memoryFirst.dataset.icon === card.dataset.icon) {
+      memoryFirst.classList.add("correct");
+      card.classList.add("correct");
+      memoryFound++;
+      memoryFirst = null;
+
+      if (memoryFound === 4) {
+        memoryMsg.innerHTML = "Success 🎉";
       }
-
-      if (target.dataset.shape === draggedShape.dataset.shape) {
-        target.innerHTML = draggedShape.innerHTML;
-        target.classList.add("correct");
-
-        draggedShape.classList.add("hidden");
-        draggedShape.classList.remove("selected");
-
-        correctCount++;
-
-        scoreBadge.innerHTML = `Doğru: ${correctCount} / ${config.count}`;
-
-        if (correctCount === config.count) {
-          if (currentLevel === 9) {
-            messageEl.innerHTML = "Tebrikler! Tüm seviyeleri tamamladın 🎉";
-            nextBtn.style.display = "none";
-          } else {
-            messageEl.innerHTML = "Success 🎉 Level tamamlandı!";
-            nextBtn.style.display = "inline-block";
-          }
-        }
-      } else {
-        messageEl.innerHTML = "Tekrar dene 🙂";
-
-        setTimeout(() => {
-          if (correctCount !== config.count) {
-            messageEl.innerHTML = "";
-          }
-        }, 900);
-      }
+    } else {
+      memoryLock = true;
+      setTimeout(() => {
+        memoryFirst.innerHTML = "❓";
+        card.innerHTML = "❓";
+        memoryFirst = null;
+        memoryLock = false;
+      }, 700);
     }
+  }
+}
 
-    function loadLevel() {
-      correctCount = 0;
-      draggedShape = null;
-      messageEl.innerHTML = "";
-      nextBtn.style.display = "none";
+/* 5 - HAYVAN OYUNU */
+const animals = [
+  {id:"dog", icon:"🐶", name:"Köpek"},
+  {id:"cat", icon:"🐱", name:"Kedi"},
+  {id:"rabbit", icon:"🐰", name:"Tavşan"},
+  {id:"lion", icon:"🦁", name:"Aslan"}
+];
 
-      const config = levelConfig[currentLevel];
-      const selectedShapes = shuffle(allShapes).slice(0, config.count);
-      const shuffledShapes = shuffle(selectedShapes);
+let selectedAnimal = null;
+let animalCorrect = 0;
 
-      levelBadge.innerHTML = `Level ${currentLevel + 1} / 10`;
-      difficultyBadge.innerHTML = `Zorluk: ${config.difficulty}`;
-      scoreBadge.innerHTML = `Doğru: 0 / ${config.count}`;
+function loadAnimalGame() {
+  selectedAnimal = null;
+  animalCorrect = 0;
+  animalMsg.innerHTML = "";
+  animalTargets.innerHTML = "";
+  animalChoices.innerHTML = "";
 
-      targetsEl.innerHTML = "";
-      shapesEl.innerHTML = "";
+  animals.forEach(a => {
+    let t = document.createElement("div");
+    t.className = "box";
+    t.dataset.id = a.id;
+    t.style.fontSize = "20px";
+    t.innerHTML = a.name;
+    t.onclick = () => matchAnimal(t);
+    animalTargets.appendChild(t);
+  });
 
-      selectedShapes.forEach(shape => {
-        const target = document.createElement("div");
-        target.className = "target";
-        target.dataset.shape = shape.id;
-        target.innerHTML = `<span>${shape.icon}</span>`;
+  shuffle(animals).forEach(a => {
+    let ch = document.createElement("div");
+    ch.className = "choice";
+    ch.dataset.id = a.id;
+    ch.innerHTML = a.icon;
+    ch.onclick = () => {
+      document.querySelectorAll("#animalChoices .choice").forEach(x => x.classList.remove("selected"));
+      ch.classList.add("selected");
+      selectedAnimal = ch;
+    };
+    animalChoices.appendChild(ch);
+  });
+}
 
-        target.addEventListener("dragover", event => {
-          event.preventDefault();
-          target.classList.add("hover");
-        });
+function matchAnimal(target) {
+  if (!selectedAnimal || target.classList.contains("correct")) return;
 
-        target.addEventListener("dragleave", () => {
-          target.classList.remove("hover");
-        });
+  if (selectedAnimal.dataset.id === target.dataset.id) {
+    target.classList.add("correct");
+    selectedAnimal.classList.add("hidden");
+    animalCorrect++;
 
-        target.addEventListener("drop", event => {
-          event.preventDefault();
-          target.classList.remove("hover");
-          handleMatch(target, config);
-        });
-
-        target.addEventListener("click", () => {
-          handleMatch(target, config);
-        });
-
-        targetsEl.appendChild(target);
-      });
-
-      shuffledShapes.forEach(shape => {
-        const shapeEl = document.createElement("div");
-        shapeEl.className = "shape";
-        shapeEl.draggable = true;
-        shapeEl.dataset.shape = shape.id;
-        shapeEl.innerHTML = shape.icon;
-
-        shapeEl.addEventListener("dragstart", () => {
-          draggedShape = shapeEl;
-        });
-
-        shapeEl.addEventListener("click", () => {
-          document.querySelectorAll(".shape").forEach(s =>
-            s.classList.remove("selected")
-          );
-
-          shapeEl.classList.add("selected");
-          draggedShape = shapeEl;
-        });
-
-        shapesEl.appendChild(shapeEl);
-      });
+    if (animalCorrect === animals.length) {
+      animalMsg.innerHTML = "Success 🎉";
     }
-
-    nextBtn.addEventListener("click", () => {
-      if (currentLevel < 9) {
-        currentLevel++;
-        loadLevel();
-      }
-    });
-
-    function restartGame() {
-      currentLevel = 0;
-      loadLevel();
-    }
-
-    loadLevel();
-  </script>
+  }
+}
+</script>
 </body>
 </html>
 """
